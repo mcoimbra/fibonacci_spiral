@@ -8,6 +8,7 @@ import time
 from typing import List, Tuple
 
 import matplotlib.pyplot as plt
+from matplotlib.text import Annotation
 from matplotlib.transforms import IdentityTransform
 from matplotlib.patches import Rectangle, Arc
 from matplotlib.collections import PatchCollection
@@ -86,6 +87,8 @@ def plot_fibonacci_spiral(
 
     pprint.pprint(fibs)
 
+
+
     x: int = 0
     y: int = 0
     angle: int = 180
@@ -97,66 +100,103 @@ def plot_fibonacci_spiral(
     # fig, ax = plt.subplots(1, figsize=(16, 16))
     fig_sz: int = 45 # 32
     fig, ax = plt.subplots(1, figsize=(fig_sz, fig_sz))
+    plt.margins(0)
 
-    drawn_number_font_sz: int = fig_sz # int(fig_sz * 0.75)
+    ##### COMMENT OUT THESE WHEN FINISHED DEVELOPING
+    # test_rect: Rectangle = Rectangle((0, 0), 100, 100)
+    # rectangles.append(test_rect)
+    # test_rect.set_x(test_rect.get_x() + 100)
+    #####
+
+    # Switch the axes coordinate limits to match the figure size in pixels.
+    ax.set_xlim(0, fig_sz * 100)
+    ax.set_ylim(0, fig_sz * 100)
+
+    # Invert Y axis so that our coordinate system matches other projects.
+    # See: https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.invert_yaxis.html
+    ax.invert_yaxis()
+    #rectangles.append(Rectangle((0, 0), 500, 500))
+
+    # Scale the fibonacci sequence numbers to match the axis scaling.
+    for i in range(0, len(fibs)):
+        # fibs[i] = fibs[i] / len(fibs)
+        fibs[i] = fibs[i] * fig_sz * 100 / fibs[-1]
+        # fibs[i] /= 2
+    # pprint.pprint("> fibs post-scaling:\n{}".format(fibs))
+
+
+    # TESTING
+    # rectangles.append(Rectangle((2700, 2700), 500, 500))
+
+    #####
+
+    drawn_number_font_sz: int = fig_sz / 2 # int(fig_sz * 0.75)
 
     previous_side: int = fibs[0]
     last_center: Tuple[float, float]
-    for i, side in enumerate(fibs):
 
-        # side = int(side / 4)
+    def add_fib_rectangles(fibs: List[int], x: int, y: int, angle: int, center: Tuple[int, int]) -> None:
+        for i, side in enumerate(fibs):
 
-        pprint.pprint("> {}-th Rectangle center: {} width: {} height: {}".format(i, [x, y], side, side))
+            # side = int(side / 4)
 
-        # On the coordinate system of matplotlib.patches.Rectangle:
-        # https://matplotlib.org/stable/api/_as_gen/matplotlib.patches.Rectangle.html
-        rect_center: Tuple[float, float] = (x, y)
-        last_center = rect_center
-        rectangles.append(Rectangle(rect_center, side, side))
-        # rectangles.append(Rectangle([x, y], side, side, linewidth=line_width))
-        if draw_square_number_labels and i > number_of_squares - 8:
-            ax.annotate(side, xy=(x + 0.45 * side, y + 0.45 * side), fontsize=drawn_number_font_sz)
+            pprint.pprint("> {}-th Rectangle center: {} width: {} height: {}".format(i, [x, y], side, side))
 
-        if draw_fibonacci_arcs:
-            this_arc = Arc(
-                center,
-                2 * side,
-                2 * side,
-                angle=angle,
-                theta1=0,
-                theta2=90,
-                edgecolor="black",
-                antialiased=True,
-            )
-            ax.add_patch(this_arc)
-        angle += 90
+            # On the coordinate system of matplotlib.patches.Rectangle:
+            # https://matplotlib.org/stable/api/_as_gen/matplotlib.patches.Rectangle.html
+            rect_center: Tuple[float, float] = (x, y)
+            last_center = rect_center
+            rectangles.append(Rectangle(rect_center, side, side))
+            # rectangles.append(Rectangle(rect_center, side, side, transform=ax.transAxes))
 
-        xs.append(x)
-        ys.append(y)
-        if i == 0:
-            x += side
-            center = (x, y + side)
-        elif i == 1:
-            x -= side
-            y += side
-            center = (x, y)
-        elif i in range(2, i + 1, 4):
-            x -= side + previous_side
-            y -= previous_side
-            center = (x + side + previous_side, y)
-        elif i in range(3, i + 1, 4):
-            y -= side + previous_side
-            center = (x + side + previous_side, y + side + previous_side)
-        elif i in range(4, i + 1, 4):
-            x += side
-            center = (x, y + side + previous_side)
-        elif i in range(5, i + 1, 4):
-            x -= previous_side
-            y += side
-            center = (x, y)
+            # rectangles.append(Rectangle([x, y], side, side, linewidth=line_width))
+            if draw_square_number_labels and i > number_of_squares - 8:
+                ax.annotate(side, xy=(x + 0.45 * side, y + 0.45 * side), fontsize=drawn_number_font_sz)
 
-        pprint.pprint("> center:\t {}".format(center))
-        previous_side = side
+            if draw_fibonacci_arcs:
+                this_arc = Arc(
+                    center,
+                    2 * side,
+                    2 * side,
+                    angle=angle,
+                    theta1=0,
+                    theta2=90,
+                    edgecolor="black",
+                    antialiased=True,
+                )
+                ax.add_patch(this_arc)
+            angle += 90
+
+            xs.append(x)
+            ys.append(y)
+            if i == 0:
+                x += side
+                center = (x, y + side)
+            elif i == 1:
+                x -= side
+                y += side
+                center = (x, y)
+            elif i in range(2, i + 1, 4):
+                x -= side + previous_side
+                y -= previous_side
+                center = (x + side + previous_side, y)
+            elif i in range(3, i + 1, 4):
+                y -= side + previous_side
+                center = (x + side + previous_side, y + side + previous_side)
+            elif i in range(4, i + 1, 4):
+                x += side
+                center = (x, y + side + previous_side)
+            elif i in range(5, i + 1, 4):
+                x -= previous_side
+                y += side
+                center = (x, y)
+
+            pprint.pprint("> center:\t {}".format(center))
+            previous_side = side
+
+    # add_fib_rectangles(fibs, x, y, angle, center)
+
+
 
     # col = PatchCollection(rectangles, alpha=alpha, edgecolor="black")
 
@@ -169,14 +209,13 @@ def plot_fibonacci_spiral(
 
     ax.grid(True, which='both')
 
-
     # fig_width, fig_height = plt.gcf().get_size()
     # print("> Figure dpi: {} width: {} height: {}".format(plt.gcf().dpi, fig_width, fig_height))
 
     # Coordinate systems of matplotlib: https://matplotlib.org/2.0.2/users/transforms_tutorial.html
-
     def add_rectangle(current_rectangles: List[Rectangle], last_rect_center: Tuple[float, float],
-                      previous_width: int, previous_height: int, depth: int = 1, prev_dir: str ="start") -> None:
+                      previous_width: int, previous_height: int, area_details: List[Tuple[int, int, int]],
+                      depth: int = 1, prev_dir: str ="start") -> None:
 
         if depth == 0:
             return
@@ -213,19 +252,25 @@ def plot_fibonacci_spiral(
                 if random.random() < 0.5:
                     # We are moving above the horizontal slash.
                     next_center: Tuple[float, float] = (x, y + next_height)
-                    if draw_square_number_labels:
-                        xdisplay, ydisplay = ax.transData.transform((x + 0.49 * previous_width, y + 0.49 * next_height))
-                        #xdisplay = * fig.dpi
-                        coord_display: str = "({}, {})".format(xdisplay, ydisplay)
+
+                    xdisplay, ydisplay = ax.transData.transform((x + 0.49 * previous_width, y + 0.49 * next_height))
+                    #xdisplay = * fig.dpi
+                    #coord_display: str = "({}, {})".format(int(xdisplay), int(fig_sz * 100 - ydisplay))
+                    coord_display: str = "{}".format(depth)
+                    area_details.append((depth, int(xdisplay), int(fig_sz * 100 - ydisplay)))
+                    if draw_square_number_labels and previous_width > 30:
                         ax.annotate(coord_display, xy=(x + 0.49 * previous_width, y + 0.49 * next_height), fontsize=drawn_number_font_sz)
                 else:
                     # We are staying below the horizontal slash.
                     next_center: Tuple[float, float] = (x, y)
-                    if draw_square_number_labels:
-                        xdisplay, ydisplay = ax.transData.transform((x + 0.49 * previous_width, y + next_height + 0.49 * next_height))
-                        coord_display: str = "({}, {})".format(xdisplay, ydisplay)
+                    xdisplay, ydisplay = ax.transData.transform(
+                        (x + 0.49 * previous_width, y + next_height + 0.49 * next_height))
+                    # coord_display: str = "({}, {})".format(int(xdisplay), int(fig_sz * 100 - ydisplay))
+                    coord_display: str = "{}".format(depth)
+                    area_details.append((depth, int(xdisplay), int(fig_sz * 100 - ydisplay)))
+                    if draw_square_number_labels and previous_width > 30:
                         ax.annotate(coord_display, xy=(x + 0.49 * previous_width, y + next_height + 0.49 * next_height), fontsize=drawn_number_font_sz)
-                add_rectangle(current_rectangles, next_center, previous_width, next_height, depth - 1, prev_dir)
+                add_rectangle(current_rectangles, next_center, previous_width, next_height, area_details, depth - 1, prev_dir)
 
 
         else:
@@ -235,59 +280,92 @@ def plot_fibonacci_spiral(
             new_rect: Rectangle = Rectangle(last_rect_center, next_width, previous_height)
             current_rectangles.append(new_rect)
 
-            b = new_rect.get_bbox()  # bbox instanc
-
-            # pprint.pprint("> bbox coord:\t{}".format(ax.transLimits.transform(b)))
-
-            # pprint.pprint("> bbox coord:\t{}".format(b.transformed(IdentityTransform())))
-            # data_rect: Rectangle = new_rect.get_patch_transform()
-            # pprint.pprint("> new_rect [patch coords]-->[data coords]:\t{}".format(data_rect))
-            # display_rect = ax.transData.transform(data_rect.xy)
-            # pprint.pprint("> new_rect [data coords]-->[display coords]:\t{}".format(display_rect))
-
-            #if draw_square_number_labels:
-            #    ax.annotate(depth, xy=(x + 0.49 * next_width, y + 0.49 * previous_height), fontsize=drawn_number_font_sz)
-
             if depth > 0:
                 if random.random() < 0.5:
                     # We are moving to the right of the vertical slash.
                     next_center: Tuple[float, float] = (x + next_width, y)
-                    if draw_square_number_labels:
-                        xdisplay, ydisplay = ax.transData.transform((x + 0.49 * next_width, y + previous_height * 0.49))
-                        coord_display: str = "({}, {})".format(xdisplay, ydisplay)
+                    xdisplay, ydisplay = ax.transData.transform((x + 0.49 * next_width, y + previous_height * 0.49))
+                    # coord_display: str = "({}, {})".format(int(xdisplay), int(fig_sz * 100 - ydisplay))
+                    coord_display: str = "{}".format(depth)
+                    area_details.append((depth, int(xdisplay), int(fig_sz * 100 - ydisplay)))
+                    if draw_square_number_labels and previous_height > 30:
                         ax.annotate(coord_display, xy=(x + 0.49 * next_width, y + previous_height * 0.49), fontsize=drawn_number_font_sz)
                 else:
                     # We are moving to the left of the vertical slash.
                     next_center: Tuple[float, float] = (x, y)
-                    if draw_square_number_labels:
-                        xdisplay, ydisplay = ax.transData.transform((x + next_width + 0.49 * next_width, y + previous_height * 0.49))
-                        coord_display: str = "({}, {})".format(xdisplay, ydisplay)
+                    xdisplay, ydisplay = ax.transData.transform(
+                        (x + next_width + 0.49 * next_width, y + previous_height * 0.49))
+                    # coord_display: str = "({}, {})".format(int(xdisplay), int(fig_sz * 100 - ydisplay))
+                    coord_display: str = "{}".format(depth)
+                    area_details.append((depth, int(xdisplay), int(fig_sz * 100 - ydisplay)))
+                    if draw_square_number_labels and previous_height > 30:
                         ax.annotate(coord_display, xy=(x + next_width + 0.49 * next_width, y + previous_height * 0.49), fontsize=drawn_number_font_sz)
 
-                add_rectangle(current_rectangles, next_center, next_width, previous_height, depth - 1, prev_dir)
+                add_rectangle(current_rectangles, next_center, next_width, previous_height, area_details, depth - 1, prev_dir)
 
     if square_recursion_depth > 0:
         # Store the new rectangles first in a separate list.
         new_rectangles: List[Rectangle] = []
 
         # Generate 'depth' rectangles.
-        print("> Generating rectangles with recursive strategy on {}.".format(last_center))
-        add_rectangle(new_rectangles, last_center,
-                      previous_width=previous_side,
-                      previous_height=previous_side,
+        # print("> Generating rectangles with recursive strategy on {}.".format(last_center))
+        # add_rectangle(new_rectangles, last_center,
+        #              previous_width=previous_side,
+        #              previous_height=previous_side,
+        #              depth=square_recursion_depth)
+
+        area_details: List[Tuple[int, int, int]] = []
+
+        add_rectangle(new_rectangles,
+                      last_rect_center=(0, 0),
+                      previous_width=fig_sz * 100,
+                      previous_height=fig_sz * 100,
+                      area_details=area_details,
                       depth=square_recursion_depth)
-
-        # Draw the new rectangles' labels if necessary.
-        # if draw_square_number_labels:
-        #    for i, r in enumerate(new_rectangles):
-
-        #        ax.annotate(i,
-        #                    xy=(r.get_x() + 0.49 * r.get_width(), r.get_y() + 0.49 * r.get_height()),
-        #                    fontsize=drawn_number_font_sz)
 
         # Add to the patch list.
         rectangles.extend(new_rectangles)
 
+    # Output area details.
+    if draw_square_number_labels:
+        coords_output_path: str = output_image_file_path.replace(".png", ".txt")
+        with open(coords_output_path, "w") as coords_file:
+            for area_id, x, y in area_details:
+                coords_file.write("{}:\t({}, {})\n".format(area_id, x, y))
+
+    # Compute the furthest top-left and bottom-right coordinates that are part of any rectangle.
+    # min_x: int = None
+    # max_x: int = None
+    # min_y: int = None
+    # max_y: int = None
+    # for r in rectangles:
+    #     if min_x is None or r.get_x() < min_x:
+    #         min_x = r.get_x()
+    #     if min_y is None or r.get_y() < min_y:
+    #         min_y = r.get_y()
+    #     if max_x is None or r.get_x() + r.get_width() > max_x:
+    #         max_x = r.get_x() + r.get_width()
+    #     if max_y is None or r.get_y() + r.get_height() > max_y:
+    #         max_y = r.get_y() + r.get_height()
+
+    # top_left: Tuple[int, int] = (min_x, min_y)
+    # bottom_right: Tuple[int, int] = (max_x, max_y)
+
+    #### DEBUG PRINTS - DELETE LATER OR SWITCH TO -d FLAG
+    # pprint.pprint("> Data coordinate top-left:{}\tbottom-right:{}".format(top_left, bottom_right))
+    # pprint.pprint("> Data to axis coordinate top-left:{}\tbottom-right:{}".format(ax.transAxes.transform(top_left),
+    #                                                                              ax.transAxes.transform(bottom_right)))
+    # pprint.pprint("> Axis coordinate to data coordinate (0, 0):{}".format(ax.transAxes.transform((0, 0))))
+
+    # Move and resize all rectangles so the furthest top-left coordinate is now at (0, 0) (axes coordinates).
+    # for r in rectangles:
+    #     r.set_x(r.get_x() - top_left[0])
+    #     r.set_y(r.get_y() - top_left[1])
+    #     r.set_width(r.get_width() * (fig_sz * 100) / bottom_right[0])
+    #    r.set_height(r.get_height() * (fig_sz * 100) / bottom_right[1])
+
+
+    # Finally configure the rectangles as a PatchCollection.
     col: PatchCollection = PatchCollection(rectangles, alpha=alpha, edgecolor="black", linewidths=line_width)
 
     try:
@@ -305,15 +383,15 @@ def plot_fibonacci_spiral(
     ax.set_xticks([])
     ax.set_yticks([])
 
-    xmin: int = np.min(xs)
-    ymin: int = np.min(ys)
-    xmax: int = np.max(xs) + fibs[np.argmax(xs)]
-    ymax: int = np.max(ys) + fibs[np.argmax(ys)]
-    ax.set_xlim(xmin, xmax)
-    ax.set_ylim(ymin, ymax)
+    # xmin: int = np.min(xs)
+    # ymin: int = np.min(ys)
+    # xmax: int = np.max(xs) + fibs[np.argmax(xs)]
+    # ymax: int = np.max(ys) + fibs[np.argmax(ys)]
+    # ax.set_xlim(xmin, xmax)
+    # ax.set_ylim(ymin, ymax)
 
-    for rect in ax:
-        pprint.pprint("> rect: {}".format(rect))
+    # for rect in ax:
+    #    pprint.pprint("> rect: {}".format(rect))
 
 
     if draw_golden_ratio:
@@ -322,6 +400,16 @@ def plot_fibonacci_spiral(
 
     plt.tight_layout()
     plt.savefig(output_image_file_path)
+
+    # Create second figure without annotations.
+    if draw_square_number_labels:
+        for child in ax.get_children():
+            if isinstance(child, Annotation):
+                child.remove()
+                # print("bingo")  # and do something
+
+        no_labels_output_image_file_path: str = output_image_file_path.replace(".png", "NO-LABELS.png")
+        plt.savefig(no_labels_output_image_file_path)
 
 
 if __name__ == "__main__":
