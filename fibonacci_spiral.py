@@ -1,6 +1,7 @@
 import argparse
 from collections.abc import Iterable
 
+import os
 import pprint
 import random
 import sys
@@ -45,7 +46,8 @@ def plot_fibonacci_spiral(
     draw_golden_ratio: bool = False,
     square_recursion_depth: int = 0,
     fib_list_order: str = "NORMAL",
-    output_image_file_path: str = "plot.png"
+    output_image_file_path: str = "RECURSIVE_SQUARE.png",
+    fig_sz: int = 20
 ):
     """Short summary.
 
@@ -85,10 +87,6 @@ def plot_fibonacci_spiral(
     elif fib_list_order == "RANDOMIZE":
         random.shuffle(fibs)
 
-    pprint.pprint(fibs)
-
-
-
     x: int = 0
     y: int = 0
     angle: int = 180
@@ -97,16 +95,9 @@ def plot_fibonacci_spiral(
     xs: List[int] = []
     ys: List[int] = []
 
-    # fig, ax = plt.subplots(1, figsize=(16, 16))
-    fig_sz: int = 45 # 32
+    # fig_sz: int = 20 # 45 # 32
     fig, ax = plt.subplots(1, figsize=(fig_sz, fig_sz))
     plt.margins(0)
-
-    ##### COMMENT OUT THESE WHEN FINISHED DEVELOPING
-    # test_rect: Rectangle = Rectangle((0, 0), 100, 100)
-    # rectangles.append(test_rect)
-    # test_rect.set_x(test_rect.get_x() + 100)
-    #####
 
     # Switch the axes coordinate limits to match the figure size in pixels.
     ax.set_xlim(0, fig_sz * 100)
@@ -115,22 +106,12 @@ def plot_fibonacci_spiral(
     # Invert Y axis so that our coordinate system matches other projects.
     # See: https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.invert_yaxis.html
     ax.invert_yaxis()
-    #rectangles.append(Rectangle((0, 0), 500, 500))
 
     # Scale the fibonacci sequence numbers to match the axis scaling.
     for i in range(0, len(fibs)):
-        # fibs[i] = fibs[i] / len(fibs)
         fibs[i] = fibs[i] * fig_sz * 100 / fibs[-1]
-        # fibs[i] /= 2
-    # pprint.pprint("> fibs post-scaling:\n{}".format(fibs))
 
-
-    # TESTING
-    # rectangles.append(Rectangle((2700, 2700), 500, 500))
-
-    #####
-
-    drawn_number_font_sz: int = fig_sz / 2 # int(fig_sz * 0.75)
+    drawn_number_font_sz: int = fig_sz / 2
 
     previous_side: int = fibs[0]
     last_center: Tuple[float, float]
@@ -194,23 +175,10 @@ def plot_fibonacci_spiral(
             pprint.pprint("> center:\t {}".format(center))
             previous_side = side
 
-    # add_fib_rectangles(fibs, x, y, angle, center)
-
-
-
-    # col = PatchCollection(rectangles, alpha=alpha, edgecolor="black")
-
-    # Add randomized rectangles.
-    # fig_width, fig_height = plt.gcf().get_size_inches() * plt.gcf().dpi
-    #fig_width *= fig.dpi
-
     print('fig.dpi = {}'.format(fig.dpi))
     print('fig.get_size_inches() = ' + str(fig.get_size_inches()))
 
     ax.grid(True, which='both')
-
-    # fig_width, fig_height = plt.gcf().get_size()
-    # print("> Figure dpi: {} width: {} height: {}".format(plt.gcf().dpi, fig_width, fig_height))
 
     # Coordinate systems of matplotlib: https://matplotlib.org/2.0.2/users/transforms_tutorial.html
     def add_rectangle(current_rectangles: List[Rectangle], last_rect_center: Tuple[float, float],
@@ -229,24 +197,7 @@ def plot_fibonacci_spiral(
             next_height: float = previous_height / 2
 
             new_rect: Rectangle = Rectangle(last_rect_center, previous_width, next_height)
-            b = new_rect.get_bbox()  # bbox instance
-
-
-            # pprint.pprint("> bbox coord:\t{}".format(b.transformed(ax.transData)))
-            #pprint.pprint("> bbox coord:\t{}".format(ax.transLimits.transform(b)))
-
-            # pprint.pprint("> bbox coord:\t{}".format(IdentityTransform.transform(b)))
-
-            # data_rect: Rectangle = new_rect.get_patch_transform()
-            # pprint.pprint("> new_rect [patch coords]-->[data coords]:\t{}".format(data_rect))
-            # display_rect = ax.transData.transform(data_rect.xy)
-            # pprint.pprint("> new_rect [data coords]-->[display coords]:\t{}".format(display_rect))
-
-
-
             current_rectangles.append(new_rect)
-            # if draw_square_number_labels:
-            #    ax.annotate(depth, xy=(x + 0.49 * previous_width, y + 0.49 * next_height), fontsize=drawn_number_font_sz)
 
             if depth > 0:
                 if random.random() < 0.5:
@@ -254,8 +205,6 @@ def plot_fibonacci_spiral(
                     next_center: Tuple[float, float] = (x, y + next_height)
 
                     xdisplay, ydisplay = ax.transData.transform((x + 0.49 * previous_width, y + 0.49 * next_height))
-                    #xdisplay = * fig.dpi
-                    #coord_display: str = "({}, {})".format(int(xdisplay), int(fig_sz * 100 - ydisplay))
                     coord_display: str = "{}".format(depth)
                     area_details.append((depth, int(xdisplay), int(fig_sz * 100 - ydisplay)))
                     if draw_square_number_labels and previous_width > 30:
@@ -265,7 +214,6 @@ def plot_fibonacci_spiral(
                     next_center: Tuple[float, float] = (x, y)
                     xdisplay, ydisplay = ax.transData.transform(
                         (x + 0.49 * previous_width, y + next_height + 0.49 * next_height))
-                    # coord_display: str = "({}, {})".format(int(xdisplay), int(fig_sz * 100 - ydisplay))
                     coord_display: str = "{}".format(depth)
                     area_details.append((depth, int(xdisplay), int(fig_sz * 100 - ydisplay)))
                     if draw_square_number_labels and previous_width > 30:
@@ -285,7 +233,6 @@ def plot_fibonacci_spiral(
                     # We are moving to the right of the vertical slash.
                     next_center: Tuple[float, float] = (x + next_width, y)
                     xdisplay, ydisplay = ax.transData.transform((x + 0.49 * next_width, y + previous_height * 0.49))
-                    # coord_display: str = "({}, {})".format(int(xdisplay), int(fig_sz * 100 - ydisplay))
                     coord_display: str = "{}".format(depth)
                     area_details.append((depth, int(xdisplay), int(fig_sz * 100 - ydisplay)))
                     if draw_square_number_labels and previous_height > 30:
@@ -295,7 +242,6 @@ def plot_fibonacci_spiral(
                     next_center: Tuple[float, float] = (x, y)
                     xdisplay, ydisplay = ax.transData.transform(
                         (x + next_width + 0.49 * next_width, y + previous_height * 0.49))
-                    # coord_display: str = "({}, {})".format(int(xdisplay), int(fig_sz * 100 - ydisplay))
                     coord_display: str = "{}".format(depth)
                     area_details.append((depth, int(xdisplay), int(fig_sz * 100 - ydisplay)))
                     if draw_square_number_labels and previous_height > 30:
@@ -306,13 +252,6 @@ def plot_fibonacci_spiral(
     if square_recursion_depth > 0:
         # Store the new rectangles first in a separate list.
         new_rectangles: List[Rectangle] = []
-
-        # Generate 'depth' rectangles.
-        # print("> Generating rectangles with recursive strategy on {}.".format(last_center))
-        # add_rectangle(new_rectangles, last_center,
-        #              previous_width=previous_side,
-        #              previous_height=previous_side,
-        #              depth=square_recursion_depth)
 
         area_details: List[Tuple[int, int, int]] = []
 
@@ -333,38 +272,6 @@ def plot_fibonacci_spiral(
             for area_id, x, y in area_details:
                 coords_file.write("{}:\t({}, {})\n".format(area_id, x, y))
 
-    # Compute the furthest top-left and bottom-right coordinates that are part of any rectangle.
-    # min_x: int = None
-    # max_x: int = None
-    # min_y: int = None
-    # max_y: int = None
-    # for r in rectangles:
-    #     if min_x is None or r.get_x() < min_x:
-    #         min_x = r.get_x()
-    #     if min_y is None or r.get_y() < min_y:
-    #         min_y = r.get_y()
-    #     if max_x is None or r.get_x() + r.get_width() > max_x:
-    #         max_x = r.get_x() + r.get_width()
-    #     if max_y is None or r.get_y() + r.get_height() > max_y:
-    #         max_y = r.get_y() + r.get_height()
-
-    # top_left: Tuple[int, int] = (min_x, min_y)
-    # bottom_right: Tuple[int, int] = (max_x, max_y)
-
-    #### DEBUG PRINTS - DELETE LATER OR SWITCH TO -d FLAG
-    # pprint.pprint("> Data coordinate top-left:{}\tbottom-right:{}".format(top_left, bottom_right))
-    # pprint.pprint("> Data to axis coordinate top-left:{}\tbottom-right:{}".format(ax.transAxes.transform(top_left),
-    #                                                                              ax.transAxes.transform(bottom_right)))
-    # pprint.pprint("> Axis coordinate to data coordinate (0, 0):{}".format(ax.transAxes.transform((0, 0))))
-
-    # Move and resize all rectangles so the furthest top-left coordinate is now at (0, 0) (axes coordinates).
-    # for r in rectangles:
-    #     r.set_x(r.get_x() - top_left[0])
-    #     r.set_y(r.get_y() - top_left[1])
-    #     r.set_width(r.get_width() * (fig_sz * 100) / bottom_right[0])
-    #    r.set_height(r.get_height() * (fig_sz * 100) / bottom_right[1])
-
-
     # Finally configure the rectangles as a PatchCollection.
     col: PatchCollection = PatchCollection(rectangles, alpha=alpha, edgecolor="black", linewidths=line_width)
 
@@ -379,27 +286,23 @@ def plot_fibonacci_spiral(
         col.set(array=np.asarray(range(number_of_squares + 1)), cmap="Blues")
 
     ax.add_collection(col)
+
+    border_rect: Rectangle = Rectangle((0, 0), fig_sz * 100, fig_sz * 100, edgecolor="black", facecolor=None,
+                                       fill=False, alpha=alpha, linewidth=line_width)
+    ax.add_patch(border_rect)
+
     ax.set_aspect("equal", "box")
     ax.set_xticks([])
     ax.set_yticks([])
-
-    # xmin: int = np.min(xs)
-    # ymin: int = np.min(ys)
-    # xmax: int = np.max(xs) + fibs[np.argmax(xs)]
-    # ymax: int = np.max(ys) + fibs[np.argmax(ys)]
-    # ax.set_xlim(xmin, xmax)
-    # ax.set_ylim(ymin, ymax)
-
-    # for rect in ax:
-    #    pprint.pprint("> rect: {}".format(rect))
-
 
     if draw_golden_ratio:
         gr: str = str(fibs[-1] / fibs[-2])
         plt.title(r"$\varphi$ = " + gr)
 
     plt.tight_layout()
-    plt.savefig(output_image_file_path)
+
+    labels_output_image_file_path: str = output_image_file_path.replace(".png", "-LABELS.png")
+    plt.savefig(labels_output_image_file_path)
 
     # Create second figure without annotations.
     if draw_square_number_labels:
@@ -408,8 +311,9 @@ def plot_fibonacci_spiral(
                 child.remove()
                 # print("bingo")  # and do something
 
-        no_labels_output_image_file_path: str = output_image_file_path.replace(".png", "NO-LABELS.png")
-        plt.savefig(no_labels_output_image_file_path)
+        # no_labels_output_image_file_path: str = output_image_file_path.replace(".png", "NO-LABELS.png")
+        # plt.savefig(no_labels_output_image_file_path)
+        plt.savefig(output_image_file_path)
 
 
 if __name__ == "__main__":
@@ -492,6 +396,15 @@ if __name__ == "__main__":
     )
 
     parser.add_argument(
+        "--samples",
+        dest="samples",
+        type=int,
+        help="Number of figures to generate",
+        default=1,
+        required=False,
+    )
+
+    parser.add_argument(
         "-l",
         "--line-width",
         dest="line_width",
@@ -533,14 +446,34 @@ if __name__ == "__main__":
                                                                           args.color_map)
     output_path = output_path.replace("ORDER", fib_order + suffix)
 
-    plot_fibonacci_spiral(
-        number_of_squares=args.number_of_squares,
-        draw_square_number_labels=bool(args.draw_square_number_labels),
-        draw_fibonacci_arcs=bool(args.draw_fibonacci_arcs),
-        line_width=args.line_width,
-        color_map=args.color_map,
-        alpha=args.alpha,
-        square_recursion_depth=args.square_recursion_depth,
-        fib_list_order=fib_order,
-        output_image_file_path=output_path
-    )
+    for i in range(0, args.samples):
+
+        color_name_suffix: str = args.color_map
+
+        if args.color_map == "Reds":
+            color_name_suffix = "RED"
+        elif args.color_map == "Blues":
+            color_name_suffix = "BLUE"
+        elif args.color_map == "YlGn":
+            color_name_suffix = "GREEN"
+        elif args.color_map == "YlOrBr":
+            color_name_suffix = "YELLOW"
+
+        output_dir_slash_index: int = output_path.rfind(os.path.sep)
+
+        fig_sz: int = 5
+
+        output_path = "figures/RECURSIVE_SQUARE_{}_{}x{}_{}.png".format(color_name_suffix, fig_sz * 100, fig_sz * 100, i + 1)
+
+        plot_fibonacci_spiral(
+            number_of_squares=args.number_of_squares,
+            draw_square_number_labels=bool(args.draw_square_number_labels),
+            draw_fibonacci_arcs=bool(args.draw_fibonacci_arcs),
+            line_width=args.line_width,
+            color_map=args.color_map,
+            alpha=args.alpha,
+            square_recursion_depth=args.square_recursion_depth,
+            fib_list_order=fib_order,
+            output_image_file_path=output_path,
+            fig_sz=fig_sz
+        )
