@@ -461,7 +461,7 @@ if __name__ == "__main__":
 
         output_dir_slash_index: int = output_path.rfind(os.path.sep)
 
-        fig_sz: int = 5
+        fig_sz: int = 45
 
         output_path = "figures/RECURSIVE_SQUARE_{}_{}x{}_{}.png".format(color_name_suffix, fig_sz * 100, fig_sz * 100, i + 1)
 
